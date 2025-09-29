@@ -110,13 +110,13 @@ app.get("/api/:id", async (req, res) => {
          TO_CHAR(emision, 'DD/MM/YYYY') as emision,
          rnc_importador, nombre_importador, rnc_comprador, nombre_comprador
        FROM vehiculos 
-       WHERE id = $1`,
+       WHERE id = ?`,
       [id]
     );
-    console.log(result.rows[0]);
-    if (result.rows.length === 0)
+    console.log(result[0]);
+    if (result.length === 0)
       return res.status(404).json({ error: "Vehículo no encontrado" });
-    res.json(result.rows[0]);
+    res.json(result[0]);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Error en el servidor" });
