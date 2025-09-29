@@ -60,7 +60,7 @@ app.post("/api/vehiculos", async (req, res) => {
       `INSERT INTO vehiculos 
         (codigo, placa, tipo, marca, modelo, color, anio, chasis, expiracion, emision, 
          rnc_importador, nombre_importador, rnc_comprador, nombre_comprador)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        RETURNING 
          id, codigo, placa, tipo, marca, modelo, color, anio, chasis,
          TO_CHAR(expiracion, 'DD/MM/YYYY') as expiracion,
