@@ -7,13 +7,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// ... (código hasta createTable)
+
 const createTable = async () => {
   try {
-    // CORRECCIÓN 1: Simplificamos el CREATE TABLE, usando pool.execute()
-    // Quitamos 'IF NOT EXISTS' que a veces causa conflicto con el pool
-    await pool.execute(` 
-      CREATE TABLE vehiculos (
-        id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, 
+    // CORRECCIÓN CLAVE: Agrupamos PRIMARY KEY y AUTO_INCREMENT
+    // para que la sintaxis de MySQL sea más robusta.
+    await pool.query(` 
+      CREATE TABLE IF NOT EXISTS vehiculos (
+        id INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
         codigo VARCHAR(50) NOT NULL,
         placa VARCHAR(20) NOT NULL,
         tipo VARCHAR(50),
@@ -58,8 +60,8 @@ app.post("/api/vehiculos", async (req, res) => {
       nombre_comprador,
     } = req.body;
 
-    // 1. Usar pool.execute()
-    const insertResult = await pool.execute(
+    // Usando pool.query() y sintaxis MySQL (sin RETURNING)
+    const insertResult = await pool.query(
       `INSERT INTO vehiculos 
         (codigo, placa, tipo, marca, modelo, color, anio, chasis, expiracion, emision, 
          rnc_importador, nombre_importador, rnc_comprador, nombre_comprador)
@@ -85,8 +87,8 @@ app.post("/api/vehiculos", async (req, res) => {
     // Obtener el ID de la fila insertada
     const insertedId = insertResult[0].insertId;
 
-    // 2. Usar pool.execute() para SELECT y DATE_FORMAT para MySQL
-    const selectResult = await pool.execute(
+    // Usar pool.query() para SELECT y DATE_FORMAT (MySQL)
+    const selectResult = await pool.query(
       `SELECT 
             id, codigo, placa, tipo, marca, modelo, color, anio, chasis,
             DATE_FORMAT(expiracion, '%d/%m/%Y') as expiracion,
@@ -97,7 +99,7 @@ app.post("/api/vehiculos", async (req, res) => {
       [insertedId]
     );
 
-    // Obtener el resultado de la consulta. La data está en el índice [0] del array.
+    // La data está en el índice [0] del array, y el vehículo es el primer elemento de esa data.
     const vehiculo = selectResult[0][0];
 
     const url = `https://dgii-gov.net/${vehiculo.id}`; // Generamos QR
@@ -117,8 +119,8 @@ app.post("/api/vehiculos", async (req, res) => {
 
 app.get("/api/:id", async (req, res) => {
   try {
-    const { id } = req.params; // Usar pool.execute() para SELECT y DATE_FORMAT para MySQL
-    const result = await pool.execute(
+    const { id } = req.params; // Usar pool.query() para SELECT y DATE_FORMAT (MySQL)
+    const result = await pool.query(
       `SELECT 
          id, codigo, placa, tipo, marca, modelo, color, anio, chasis,
          DATE_FORMAT(expiracion, '%d/%m/%Y') as expiracion,
