@@ -7,6 +7,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 // Ruta para guardar vehículo y generar QR
+// Ruta para guardar vehículo y generar QR
 app.post("/api/vehiculos", async (req, res) => {
   try {
     const {
@@ -26,12 +27,14 @@ app.post("/api/vehiculos", async (req, res) => {
       nombre_comprador,
     } = req.body;
 
-    // 1. Inserción (Usa pool.query() y placeholders ?)
+    // 1. Inserción: Usando un template literal SIMPLE sin concatenaciones
     const insertResult = await pool.query(
-      `INSERT INTO vehiculos 
+      `
+      INSERT INTO vehiculos 
         (codigo, placa, tipo, marca, modelo, color, anio, chasis, expiracion, emision, 
          rnc_importador, nombre_importador, rnc_comprador, nombre_comprador)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `,
       [
         codigo,
         placa,
@@ -50,18 +53,20 @@ app.post("/api/vehiculos", async (req, res) => {
       ]
     );
 
-    // Obtener el ID de la fila insertada (insertId es específico de MySQL)
+    // Obtener el ID de la fila insertada
     const insertedId = insertResult[0].insertId;
 
-    // 2. Selección con formato de fechas (DATE_FORMAT es específico de MySQL)
+    // 2. Selección con formato de fechas (También usando template literal simple)
     const selectResult = await pool.query(
-      `SELECT 
+      `
+        SELECT 
             id, codigo, placa, tipo, marca, modelo, color, anio, chasis,
             DATE_FORMAT(expiracion, '%d/%m/%Y') as expiracion,
             DATE_FORMAT(emision, '%d/%m/%Y') as emision,
             rnc_importador, nombre_importador, rnc_comprador, nombre_comprador
          FROM vehiculos 
-         WHERE id = ?`,
+         WHERE id = ?
+    `,
       [insertedId]
     );
 
