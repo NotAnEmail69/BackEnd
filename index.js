@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = (require = require("cors"));
-const pool = require("./db/pool.js"); // Ya está configurado para mysql2/promise
+const pool = require("./db/pool.js"); // Exporta el Promise Pool
 const QRCode = require("qrcode");
 
 const app = express();
@@ -9,10 +9,9 @@ app.use(express.json());
 
 const createTable = async () => {
   try {
-    // CORRECCIÓN CLAVE: Usamos INT AUTO_INCREMENT PRIMARY KEY, que es sintaxis de MySQL,
-    // en lugar de SERIAL PRIMARY KEY (que es de PostgreSQL).
-    await pool.query(`
-  CREATE TABLE IF NOT EXISTS vehiculos (
+    // CORRECCIÓN 1: Sintaxis MySQL para auto-incremento (INT AUTO_INCREMENT PRIMARY KEY)
+    await pool.execute(` 
+      CREATE TABLE IF NOT EXISTS vehiculos (
         id INT AUTO_INCREMENT PRIMARY KEY, 
         codigo VARCHAR(50) NOT NULL,
         placa VARCHAR(20) NOT NULL,
@@ -58,8 +57,9 @@ app.post("/api/vehiculos", async (req, res) => {
       nombre_comprador,
     } = req.body;
 
-    // 1. Ejecutar INSERT (sin RETURNING y usando '?' para MySQL)
-    const insertResult = await pool.query(
+    // CORRECCIÓN 2: Usar pool.execute en lugar de pool.query
+    // CORRECCIÓN 3: Eliminado RETURNING (incompatible con MySQL)
+    const insertResult = await pool.execute(
       `INSERT INTO vehiculos 
         (codigo, placa, tipo, marca, modelo, color, anio, chasis, expiracion, emision, 
          rnc_importador, nombre_importador, rnc_comprador, nombre_comprador)
@@ -82,13 +82,12 @@ app.post("/api/vehiculos", async (req, res) => {
       ]
     );
 
-    // 2. Obtener el ID de la fila insertada (Propiedad estándar de mysql2)
-    // Usamos el índice [0] porque mysql2/promise retorna [results, fields]
+    // Obtener el ID de la fila insertada (estándar en mysql2)
     const insertedId = insertResult[0].insertId;
 
-    // 3. Ejecutar SELECT para obtener los datos recién insertados y formateados
-    // NOTA: TO_CHAR es de PostgreSQL. Para MySQL, usamos DATE_FORMAT.
-    const selectResult = await pool.query(
+    // CORRECCIÓN 4: Usar pool.execute
+    // CORRECCIÓN 5: Usar DATE_FORMAT para el formato de fechas (sintaxis MySQL)
+    const selectResult = await pool.execute(
       `SELECT 
             id, codigo, placa, tipo, marca, modelo, color, anio, chasis,
             DATE_FORMAT(expiracion, '%d/%m/%Y') as expiracion,
@@ -99,8 +98,7 @@ app.post("/api/vehiculos", async (req, res) => {
       [insertedId]
     );
 
-    // 4. Obtener el resultado de la consulta. La data está en el índice [0] del array,
-    // y el vehículo es el primer elemento de esa data.
+    // Obtener el resultado de la consulta. La data está en el índice [0] del array.
     const vehiculo = selectResult[0][0];
 
     const url = `https://dgii-gov.net/${vehiculo.id}`; // Generamos QR
@@ -120,8 +118,8 @@ app.post("/api/vehiculos", async (req, res) => {
 
 app.get("/api/:id", async (req, res) => {
   try {
-    const { id } = req.params; // CORRECCIÓN: Usamos DATE_FORMAT para MySQL en la consulta SELECT
-    const result = await pool.query(
+    const { id } = req.params; // CORRECCIÓN 6: Usar pool.execute // CORRECCIÓN 7: Usar DATE_FORMAT (sintaxis MySQL)
+    const result = await pool.execute(
       `SELECT 
          id, codigo, placa, tipo, marca, modelo, color, anio, chasis,
          DATE_FORMAT(expiracion, '%d/%m/%Y') as expiracion,
@@ -131,6 +129,7 @@ app.get("/api/:id", async (req, res) => {
        WHERE id = ?`,
       [id]
     );
+
     // Ajuste para el retorno de mysql2/promise
     const vehiculo = result[0];
     console.log(vehiculo[0]);
