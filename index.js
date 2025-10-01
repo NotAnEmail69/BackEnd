@@ -11,11 +11,10 @@ app.use(express.json());
 
 const createTable = async () => {
   try {
-    // CORRECCIÓN CLAVE: Agrupamos PRIMARY KEY y AUTO_INCREMENT
-    // para que la sintaxis de MySQL sea más robusta.
+    // CORRECCIÓN DEFINITIVA: Separamos AUTO_INCREMENT y PRIMARY KEY para máxima compatibilidad
     await pool.query(` 
       CREATE TABLE IF NOT EXISTS vehiculos (
-        id INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
+        id INT NOT NULL AUTO_INCREMENT, 
         codigo VARCHAR(50) NOT NULL,
         placa VARCHAR(20) NOT NULL,
         tipo VARCHAR(50),
@@ -29,7 +28,9 @@ const createTable = async () => {
         rnc_importador VARCHAR(50),
         nombre_importador VARCHAR(100),
         rnc_comprador VARCHAR(50),
-        nombre_comprador VARCHAR(100)
+        nombre_comprador VARCHAR(100),
+
+        PRIMARY KEY (id)
       );
     `);
     console.log("✅ Tabla 'vehiculos' lista");
