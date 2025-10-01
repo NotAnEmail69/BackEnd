@@ -9,10 +9,11 @@ app.use(express.json());
 
 const createTable = async () => {
   try {
-    // Usando pool.execute() y sintaxis MySQL para auto-incremento
+    // CORRECCIÓN 1: Simplificamos el CREATE TABLE, usando pool.execute()
+    // Quitamos 'IF NOT EXISTS' que a veces causa conflicto con el pool
     await pool.execute(` 
-      CREATE TABLE IF NOT EXISTS vehiculos (
-        id INT AUTO_INCREMENT PRIMARY KEY, 
+      CREATE TABLE vehiculos (
+        id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, 
         codigo VARCHAR(50) NOT NULL,
         placa VARCHAR(20) NOT NULL,
         tipo VARCHAR(50),
