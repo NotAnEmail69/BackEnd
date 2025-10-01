@@ -2,6 +2,7 @@
 const mysql = require("mysql2");
 
 // Crea el pool de conexiones y llama a .promise() inmediatamente.
+// Esto permite que el backend use pool.query()
 const pool = mysql
   .createPool({
     host: "localhost",
@@ -13,7 +14,7 @@ const pool = mysql
     connectionLimit: 10,
     queueLimit: 0,
   })
-  .promise(); // Llama a .promise() aquí.
+  .promise();
 
 // Exporta el Pool de Promesas COMPLETO
 module.exports = pool;

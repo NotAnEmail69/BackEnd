@@ -1,13 +1,12 @@
 const express = require("express");
 const cors = require("cors");
-const pool = require("./db/pool.js"); // Ahora exporta el Pool de Promesas completo
+const pool = require("./db/pool.js");
 const QRCode = require("qrcode");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-
-// Guardar vehículo y generar QR
+// Ruta para guardar vehículo y generar QR
 app.post("/api/vehiculos", async (req, res) => {
   try {
     const {
@@ -27,7 +26,7 @@ app.post("/api/vehiculos", async (req, res) => {
       nombre_comprador,
     } = req.body;
 
-    // Usando pool.query() y sintaxis MySQL (sin RETURNING)
+    // 1. Inserción (Usa pool.query() y placeholders ?)
     const insertResult = await pool.query(
       `INSERT INTO vehiculos 
         (codigo, placa, tipo, marca, modelo, color, anio, chasis, expiracion, emision, 
@@ -51,10 +50,10 @@ app.post("/api/vehiculos", async (req, res) => {
       ]
     );
 
-    // Obtener el ID de la fila insertada
+    // Obtener el ID de la fila insertada (insertId es específico de MySQL)
     const insertedId = insertResult[0].insertId;
 
-    // Usar pool.query() para SELECT y DATE_FORMAT (MySQL)
+    // 2. Selección con formato de fechas (DATE_FORMAT es específico de MySQL)
     const selectResult = await pool.query(
       `SELECT 
             id, codigo, placa, tipo, marca, modelo, color, anio, chasis,
@@ -66,27 +65,22 @@ app.post("/api/vehiculos", async (req, res) => {
       [insertedId]
     );
 
-    // La data está en el índice [0] del array, y el vehículo es el primer elemento de esa data.
+    // Obtener el resultado
     const vehiculo = selectResult[0][0];
-
-    const url = `https://dgii-gov.net/${vehiculo.id}`; // Generamos QR
-
-    const qrCodeDataURL = await QRCode.toDataURL(url);
 
     res.status(201).json({
       ...vehiculo,
-      qr: qrCodeDataURL,
-      link: url,
     });
   } catch (err) {
-    console.error(err);
+    console.error("Error en /api/vehiculos:", err);
     res.status(500).json({ error: "Error al guardar vehículo" });
   }
 });
 
+// Ruta para obtener vehículo por ID
 app.get("/api/:id", async (req, res) => {
   try {
-    const { id } = req.params; // Usar pool.query() para SELECT y DATE_FORMAT (MySQL)
+    const { id } = req.params;
     const result = await pool.query(
       `SELECT 
          id, codigo, placa, tipo, marca, modelo, color, anio, chasis,
@@ -98,15 +92,15 @@ app.get("/api/:id", async (req, res) => {
       [id]
     );
 
-    // Ajuste para el retorno de mysql2/promise
     const vehiculo = result[0];
 
     if (vehiculo.length === 0)
       return res.status(404).json({ error: "Vehículo no encontrado" });
     res.json(vehiculo[0]);
   } catch (err) {
-    console.error(err);
+    console.error("Error en /api/:id:", err);
     res.status(500).json({ error: "Error en el servidor" });
   }
 });
+
 app.listen(4000, () => console.log("✅ Backend en http://localhost:4000"));
