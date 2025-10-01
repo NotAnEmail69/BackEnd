@@ -7,38 +7,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ... (código hasta createTable)
-
-const createTable = async () => {
-  try {
-    // CORRECCIÓN FINAL: Sintaxis estándar de MySQL. Combina todo en una sola línea.
-    await pool.query(` 
-      CREATE TABLE IF NOT EXISTS vehiculos (
-        id INT AUTO_INCREMENT PRIMARY KEY, 
-        codigo VARCHAR(50) NOT NULL,
-        placa VARCHAR(20) NOT NULL,
-        tipo VARCHAR(50),
-        marca VARCHAR(50),
-        modelo VARCHAR(50),
-        color VARCHAR(30),
-        anio INT,
-        chasis VARCHAR(100),
-        expiracion DATE,
-        emision DATE,
-        rnc_importador VARCHAR(50),
-        nombre_importador VARCHAR(100),
-        rnc_comprador VARCHAR(50),
-        nombre_comprador VARCHAR(100)
-      );
-    `);
-    console.log("✅ Tabla 'vehiculos' lista");
-  } catch (err) {
-    console.error("❌ Error creando tabla 'vehiculos':", err);
-  }
-};
-
-createTable();
-
 // Guardar vehículo y generar QR
 app.post("/api/vehiculos", async (req, res) => {
   try {
