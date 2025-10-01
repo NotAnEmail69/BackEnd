@@ -1,6 +1,6 @@
 const express = require("express");
-const cors = (require = require("cors"));
-const pool = require("./db/pool.js"); // Exporta el Promise Pool
+const cors = require("cors");
+const pool = require("./db/pool.js"); // Ahora exporta el Pool de Promesas completo
 const QRCode = require("qrcode");
 
 const app = express();
@@ -9,7 +9,7 @@ app.use(express.json());
 
 const createTable = async () => {
   try {
-    // CORRECCIÓN 1: Sintaxis MySQL para auto-incremento (INT AUTO_INCREMENT PRIMARY KEY)
+    // Usando pool.execute() y sintaxis MySQL para auto-incremento
     await pool.execute(` 
       CREATE TABLE IF NOT EXISTS vehiculos (
         id INT AUTO_INCREMENT PRIMARY KEY, 
@@ -57,8 +57,7 @@ app.post("/api/vehiculos", async (req, res) => {
       nombre_comprador,
     } = req.body;
 
-    // CORRECCIÓN 2: Usar pool.execute en lugar de pool.query
-    // CORRECCIÓN 3: Eliminado RETURNING (incompatible con MySQL)
+    // 1. Usar pool.execute()
     const insertResult = await pool.execute(
       `INSERT INTO vehiculos 
         (codigo, placa, tipo, marca, modelo, color, anio, chasis, expiracion, emision, 
@@ -82,11 +81,10 @@ app.post("/api/vehiculos", async (req, res) => {
       ]
     );
 
-    // Obtener el ID de la fila insertada (estándar en mysql2)
+    // Obtener el ID de la fila insertada
     const insertedId = insertResult[0].insertId;
 
-    // CORRECCIÓN 4: Usar pool.execute
-    // CORRECCIÓN 5: Usar DATE_FORMAT para el formato de fechas (sintaxis MySQL)
+    // 2. Usar pool.execute() para SELECT y DATE_FORMAT para MySQL
     const selectResult = await pool.execute(
       `SELECT 
             id, codigo, placa, tipo, marca, modelo, color, anio, chasis,
@@ -118,7 +116,7 @@ app.post("/api/vehiculos", async (req, res) => {
 
 app.get("/api/:id", async (req, res) => {
   try {
-    const { id } = req.params; // CORRECCIÓN 6: Usar pool.execute // CORRECCIÓN 7: Usar DATE_FORMAT (sintaxis MySQL)
+    const { id } = req.params; // Usar pool.execute() para SELECT y DATE_FORMAT para MySQL
     const result = await pool.execute(
       `SELECT 
          id, codigo, placa, tipo, marca, modelo, color, anio, chasis,
@@ -132,7 +130,6 @@ app.get("/api/:id", async (req, res) => {
 
     // Ajuste para el retorno de mysql2/promise
     const vehiculo = result[0];
-    console.log(vehiculo[0]);
 
     if (vehiculo.length === 0)
       return res.status(404).json({ error: "Vehículo no encontrado" });
