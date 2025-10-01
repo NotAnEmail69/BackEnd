@@ -8,6 +8,7 @@ app.use(cors());
 app.use(express.json());
 // Ruta para guardar vehículo y generar QR
 // Ruta para guardar vehículo y generar QR
+// Ruta para guardar vehículo y generar QR
 app.post("/api/vehiculos", async (req, res) => {
   try {
     const {
@@ -27,36 +28,34 @@ app.post("/api/vehiculos", async (req, res) => {
       nombre_comprador,
     } = req.body;
 
-    // 1. Inserción: Usando un template literal SIMPLE sin concatenaciones
-    const insertResult = await pool.query(
-      `
-      INSERT INTO vehiculos 
-        (codigo, placa, tipo, marca, modelo, color, anio, chasis, expiracion, emision, 
-         rnc_importador, nombre_importador, rnc_comprador, nombre_comprador)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `,
-      [
-        codigo,
-        placa,
-        tipo,
-        marca,
-        modelo,
-        color,
-        anio,
-        chasis,
-        expiracion,
-        emision,
-        rnc_importador,
-        nombre_importador,
-        rnc_comprador,
-        nombre_comprador,
-      ]
-    );
+    // CONSULTA INSERT EN UNA SOLA LÍNEA LÓGICA
+    // Usamos comillas simples para la consulta, ya que a veces las template literals causan problemas.
+    const sqlInsert = `INSERT INTO vehiculos (
+        codigo, placa, tipo, marca, modelo, color, anio, chasis, expiracion, emision, 
+        rnc_importador, nombre_importador, rnc_comprador, nombre_comprador
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+    const insertResult = await pool.query(sqlInsert, [
+      codigo,
+      placa,
+      tipo,
+      marca,
+      modelo,
+      color,
+      anio,
+      chasis,
+      expiracion,
+      emision,
+      rnc_importador,
+      nombre_importador,
+      rnc_comprador,
+      nombre_comprador,
+    ]);
 
     // Obtener el ID de la fila insertada
     const insertedId = insertResult[0].insertId;
 
-    // 2. Selección con formato de fechas (También usando template literal simple)
+    // CONSULTA SELECT (Usando template literal por limpieza de código)
     const selectResult = await pool.query(
       `
         SELECT 
@@ -70,11 +69,15 @@ app.post("/api/vehiculos", async (req, res) => {
       [insertedId]
     );
 
-    // Obtener el resultado
+    // Obtener el resultado y generar QR
     const vehiculo = selectResult[0][0];
+    const url = `https://dgii-gov.net/${vehiculo.id}`;
+    const qrCodeDataURL = await QRCode.toDataURL(url);
 
     res.status(201).json({
       ...vehiculo,
+      qr: qrCodeDataURL,
+      link: url,
     });
   } catch (err) {
     console.error("Error en /api/vehiculos:", err);
