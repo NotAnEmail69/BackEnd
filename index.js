@@ -87,18 +87,12 @@ app.post("/api/vehiculos", async (req, res) => {
 
 // Ruta para obtener vehículo por ID
 // Ruta para obtener vehículo por ID
+// Ruta para obtener vehículo por ID
 app.get("/api/:id", async (req, res) => {
   try {
-    const { id } = req.params; // CONSULTA SELECT DE MYSQL EN UNA SOLA LÍNEA LÓGICA
-    const sqlSelect = `
-      SELECT 
-        id, codigo, placa, tipo, marca, modelo, color, anio, chasis,
-        DATE_FORMAT(expiracion, '%d/%m/%Y') as expiracion,
-        DATE_FORMAT(emision, '%d/%m/%Y') as emision,
-        rnc_importador, nombre_importador, rnc_comprador, nombre_comprador
-      FROM vehiculos 
-      WHERE id = ?
-    `;
+    const { id } = req.params; // CONSULTA SELECT DE MYSQL: ¡En una sola línea, con comillas simples!
+    const sqlSelect =
+      'SELECT id, codigo, placa, tipo, marca, modelo, color, anio, chasis, DATE_FORMAT(expiracion, "%d/%m/%Y") as expiracion, DATE_FORMAT(emision, "%d/%m/%Y") as emision, rnc_importador, nombre_importador, rnc_comprador, nombre_comprador FROM vehiculos WHERE id = ?';
 
     const result = await pool.query(sqlSelect, [id]); // MySQL/Promise devuelve los resultados en el índice [0] del array
 
