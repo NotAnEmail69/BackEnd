@@ -85,16 +85,13 @@ app.post("/api/vehiculos", async (req, res) => {
   }
 });
 
-// Ruta para obtener vehículo por ID
-// Ruta para obtener vehículo por ID
-// Ruta para obtener vehículo por ID
-app.get("/api/:id", async (req, res) => {
+app.get("/api/:codigo", async (req, res) => {
   try {
-    const { id } = req.params; // CONSULTA SELECT DE MYSQL: ¡En una sola línea, con comillas simples!
+    const { codigo } = req.params; // CONSULTA SELECT DE MYSQL: ¡En una sola línea, con comillas simples!
     const sqlSelect =
-      'SELECT id, codigo, placa, tipo, marca, modelo, color, anio, chasis, DATE_FORMAT(expiracion, "%d/%m/%Y") as expiracion, DATE_FORMAT(emision, "%d/%m/%Y") as emision, rnc_importador, nombre_importador, rnc_comprador, nombre_comprador FROM vehiculos WHERE id = ?';
+      'SELECT id, codigo, placa, tipo, marca, modelo, color, anio, chasis, DATE_FORMAT(expiracion, "%d/%m/%Y") as expiracion, DATE_FORMAT(emision, "%d/%m/%Y") as emision, rnc_importador, nombre_importador, rnc_comprador, nombre_comprador FROM vehiculos WHERE codigo = ?';
 
-    const result = await pool.query(sqlSelect, [id]); // MySQL/Promise devuelve los resultados en el índice [0] del array
+    const result = await pool.query(sqlSelect, [codigo]); // MySQL/Promise devuelve los resultados en el índice [0] del array
 
     const vehiculo = result[0];
 
@@ -103,7 +100,7 @@ app.get("/api/:id", async (req, res) => {
     // Devolvemos el primer elemento
     res.json(vehiculo[0]);
   } catch (err) {
-    console.error("Error en /api/:id:", err);
+    console.error("Error en /api/:codigo:", err);
     res.status(500).json({ error: "Error en el servidor" });
   }
 });
