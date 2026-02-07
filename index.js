@@ -66,7 +66,7 @@ app.post("/api/vehiculos", async (req, res) => {
          FROM vehiculos 
          WHERE id = ?
     `,
-      [insertedId]
+      [insertedId],
     );
 
     // Obtener el resultado y generar QR
@@ -82,6 +82,16 @@ app.post("/api/vehiculos", async (req, res) => {
   } catch (err) {
     console.error("Error en /api/vehiculos:", err);
     res.status(500).json({ error: "Error al guardar vehículo" });
+  }
+});
+
+app.post("/api/login", async (req, res) => {
+  const { username, password } = req.body;
+  // Para este ejemplo, usaremos credenciales hardcodeadas. En producción, esto debe ser una consulta a la base de datos.
+  if (username === "admin" && password === "XcK9!@#") {
+    res.json({ success: true, message: "Login exitoso" });
+  } else {
+    res.status(401).json({ success: false, message: "Credenciales inválidas" });
   }
 });
 
